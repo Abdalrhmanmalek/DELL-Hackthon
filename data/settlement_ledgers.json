@@ -1,13 +1,69 @@
 [
     {
+        "facility_id": "FAC-007",
+        "period": "2025-01-01 to 2025-01-07",
+        "mwh_absorbed": 102.57,
+        "gross_savings_egp": 547467.38,
+        "factory_discount_credit_egp": 273733.69
+    },
+    {
         "facility_id": "FAC-001",
+        "period": "2025-01-01 to 2025-01-07",
+        "mwh_absorbed": 62.91,
+        "gross_savings_egp": 335782.12,
+        "factory_discount_credit_egp": 167891.06
+    },
+    {
+        "facility_id": "FAC-010",
+        "period": "2025-01-01 to 2025-01-07",
+        "mwh_absorbed": 59.07,
+        "gross_savings_egp": 315286.13,
+        "factory_discount_credit_egp": 157643.06
+    },
+    {
+        "facility_id": "FAC-013",
+        "period": "2025-01-01 to 2025-01-07",
+        "mwh_absorbed": 50.14,
+        "gross_savings_egp": 267616.38,
+        "factory_discount_credit_egp": 133808.19
+    },
+    {
+        "facility_id": "FAC-019",
+        "period": "2025-01-01 to 2025-01-07",
+        "mwh_absorbed": 34.75,
+        "gross_savings_egp": 185501.61,
+        "factory_discount_credit_egp": 92750.81
+    },
+    {
+        "facility_id": "FAC-016",
+        "period": "2025-01-01 to 2025-01-07",
+        "mwh_absorbed": 34.68,
+        "gross_savings_egp": 185104.5,
+        "factory_discount_credit_egp": 92552.25
+    },
+    {
+        "facility_id": "FAC-028",
+        "period": "2025-01-01 to 2025-01-07",
+        "mwh_absorbed": 26.88,
+        "gross_savings_egp": 143460.79,
+        "factory_discount_credit_egp": 71730.4
+    },
+    {
+        "facility_id": "FAC-022",
+        "period": "2025-01-01 to 2025-01-07",
+        "mwh_absorbed": 21.23,
+        "gross_savings_egp": 113315.12,
+        "factory_discount_credit_egp": 56657.56
+    },
+    {
+        "facility_id": "FAC-006",
         "period": "2025-01-01 to 2025-01-07",
         "mwh_absorbed": 0.0,
         "gross_savings_egp": 0.0,
         "factory_discount_credit_egp": 0.0
     },
     {
-        "facility_id": "FAC-002",
+        "facility_id": "FAC-008",
         "period": "2025-01-01 to 2025-01-07",
         "mwh_absorbed": 0.0,
         "gross_savings_egp": 0.0,
@@ -15,13 +71,6 @@
     },
     {
         "facility_id": "FAC-029",
-        "period": "2025-01-01 to 2025-01-07",
-        "mwh_absorbed": 0.0,
-        "gross_savings_egp": 0.0,
-        "factory_discount_credit_egp": 0.0
-    },
-    {
-        "facility_id": "FAC-028",
         "period": "2025-01-01 to 2025-01-07",
         "mwh_absorbed": 0.0,
         "gross_savings_egp": 0.0,
@@ -63,13 +112,6 @@
         "factory_discount_credit_egp": 0.0
     },
     {
-        "facility_id": "FAC-022",
-        "period": "2025-01-01 to 2025-01-07",
-        "mwh_absorbed": 0.0,
-        "gross_savings_egp": 0.0,
-        "factory_discount_credit_egp": 0.0
-    },
-    {
         "facility_id": "FAC-021",
         "period": "2025-01-01 to 2025-01-07",
         "mwh_absorbed": 0.0,
@@ -84,7 +126,7 @@
         "factory_discount_credit_egp": 0.0
     },
     {
-        "facility_id": "FAC-019",
+        "facility_id": "FAC-003",
         "period": "2025-01-01 to 2025-01-07",
         "mwh_absorbed": 0.0,
         "gross_savings_egp": 0.0,
@@ -105,7 +147,7 @@
         "factory_discount_credit_egp": 0.0
     },
     {
-        "facility_id": "FAC-016",
+        "facility_id": "FAC-002",
         "period": "2025-01-01 to 2025-01-07",
         "mwh_absorbed": 0.0,
         "gross_savings_egp": 0.0,
@@ -126,7 +168,7 @@
         "factory_discount_credit_egp": 0.0
     },
     {
-        "facility_id": "FAC-013",
+        "facility_id": "FAC-004",
         "period": "2025-01-01 to 2025-01-07",
         "mwh_absorbed": 0.0,
         "gross_savings_egp": 0.0,
@@ -147,41 +189,6 @@
         "factory_discount_credit_egp": 0.0
     },
     {
-        "facility_id": "FAC-010",
-        "period": "2025-01-01 to 2025-01-07",
-        "mwh_absorbed": 0.0,
-        "gross_savings_egp": 0.0,
-        "factory_discount_credit_egp": 0.0
-    },
-    {
-        "facility_id": "FAC-009",
-        "period": "2025-01-01 to 2025-01-07",
-        "mwh_absorbed": 0.0,
-        "gross_savings_egp": 0.0,
-        "factory_discount_credit_egp": 0.0
-    },
-    {
-        "facility_id": "FAC-008",
-        "period": "2025-01-01 to 2025-01-07",
-        "mwh_absorbed": 0.0,
-        "gross_savings_egp": 0.0,
-        "factory_discount_credit_egp": 0.0
-    },
-    {
-        "facility_id": "FAC-007",
-        "period": "2025-01-01 to 2025-01-07",
-        "mwh_absorbed": 0.0,
-        "gross_savings_egp": 0.0,
-        "factory_discount_credit_egp": 0.0
-    },
-    {
-        "facility_id": "FAC-006",
-        "period": "2025-01-01 to 2025-01-07",
-        "mwh_absorbed": 0.0,
-        "gross_savings_egp": 0.0,
-        "factory_discount_credit_egp": 0.0
-    },
-    {
         "facility_id": "FAC-005",
         "period": "2025-01-01 to 2025-01-07",
         "mwh_absorbed": 0.0,
@@ -189,14 +196,7 @@
         "factory_discount_credit_egp": 0.0
     },
     {
-        "facility_id": "FAC-004",
-        "period": "2025-01-01 to 2025-01-07",
-        "mwh_absorbed": 0.0,
-        "gross_savings_egp": 0.0,
-        "factory_discount_credit_egp": 0.0
-    },
-    {
-        "facility_id": "FAC-003",
+        "facility_id": "FAC-009",
         "period": "2025-01-01 to 2025-01-07",
         "mwh_absorbed": 0.0,
         "gross_savings_egp": 0.0,
