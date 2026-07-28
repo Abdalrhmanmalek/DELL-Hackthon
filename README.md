@@ -19,7 +19,7 @@ To prevent curtailment, Shabaka Pulse dynamically redirects surplus renewable en
 [ Meteorological Data Prep ] (Hub-height wind, time features)
        |
        v
-[ XGBoost Forecasting Models ] (1.5x scaled capacity simulation)
+[ XGBoost Forecasting Models ]
        |
        v
 [ Surplus Calculation ] (Local headroom constraint)
@@ -112,7 +112,7 @@ Implements and validates the surplus allocation solver.
 
 ### Step 6 — `compute_surplus.ipynb` (Surplus & Capacity Expansion)
 Runs full-year hourly predictions and calculates grid surplus.
-- **Capacity Expansion**: Simulates a 50% capacity expansion. Solar and wind predictions are scaled by **1.5** inside the Pandas DataFrame before calculating total generation and surplus.
+- **Renewable Prediction Generation**: Solar and wind predictions are processed inside the Pandas DataFrame to calculate total generation and surplus.
 - **Local Transmission Proxy**: National demand is modeled as a diurnal and seasonal curve (20,000–38,000 MW). Local headroom limit is defined as `HEADROOM_FRACTION = 0.09` (9% of national demand) with a 400 MW floor.
 - **Calculations**: `surplus_mw = max(0, solar_pred_mw + wind_pred_mw - local_headroom_mw)`.
 - **Output**: `data/surplus_forecast.csv`.
@@ -168,7 +168,7 @@ Run the notebooks in this order on a clean environment to generate all data:
 3. build_facility_dataset.ipynb  → creates data/facilities.csv
 4. facility_clustering.ipynb     → creates data/facilities_clustered.csv
 5. dispatch_solver.ipynb         → validates dispatch logic (runs tests in memory)
-6. compute_surplus.ipynb         → creates data/surplus_forecast.csv (runs 1.5x scaled capacity simulation)
+6. compute_surplus.ipynb         → creates data/surplus_forecast.csv
 7. settlement_engine.ipynb       → creates data/settlement_ledgers.json
 8. digital_twin_sim.ipynb        → runs swing equation and interlock simulation
 9. app.py                        → Streamlit dashboard reads forecast, clusters, and ledgers
