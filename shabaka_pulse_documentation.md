@@ -48,7 +48,6 @@ graph TD
     F --> I
     H --> I
     D --> J["digital_twin_sim.ipynb<br/>Swing Equation Simulation"]
-end
 ```
 
 ### Execution Order
