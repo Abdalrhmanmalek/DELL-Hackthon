@@ -1,17 +1,41 @@
-# Shabaka Pulse — DELL Hackathon
+# Shabaka Pulse — Virtual Power Plant & Grid Stability Engine
 
-A Virtual Power Plant (VPP) demand-response pipeline built for the DELL Hackathon. The system pulls real solar and wind data from NASA's public API, trains XGBoost forecasting models, generates a synthetic industrial facility network, clusters facilities into operational tiers, and implements a priority-based surplus dispatch engine.
+Shabaka Pulse is an end-to-end Virtual Power Plant (VPP) demand-response and grid stability pipeline. The system optimizes the utilization of renewable energy, mitigates curtailment, and protects grid frequency stability. 
+
+The pipeline fetches real meteorological data, forecasts generation, runs a priority-based dispatch model across clustered industrial facilities, executes a financial settlement engine, runs a digital twin frequency simulation, and exposes an interactive monitoring dashboard.
 
 ---
 
-## Project Overview
+## Project Architecture & Core Logic
 
-Shabaka Pulse addresses renewable energy curtailment in Egypt. When Benban Solar Park (1,800 MW) and the Gulf of Suez wind corridor (500 MW) generate more power than the grid's local transmission corridor can absorb, that surplus is wasted. This project demonstrates a VPP pipeline that:
+Shabaka Pulse addresses Egypt's regional transmission constraints. The combined peak capacity of the Benban Solar Park (1,800 MW) and the Gulf of Suez Wind Corridor (500 MW) is small relative to national demand (20,000–38,000 MW), but local transmission bottlenecks block this power from reaching the national grid. 
 
-1. **Forecasts** hourly solar and wind generation using real NASA weather data.
-2. **Calculates** the curtailable surplus MW at each hour after applying transmission constraints.
-3. **Dispatches** that surplus to 30 industrial demand-response facilities prioritized by operational safety.
-4. **Settles** each allocation into financial billing credits per facility.
+To prevent curtailment, Shabaka Pulse dynamically redirects surplus renewable energy to a Virtual Power Plant consisting of 30 heavy industrial facilities (hydraulic pumping, desalination, thermal cold storage, cement/steel batch processing).
+
+```
+[ NASA POWER API ] (Benban & Suez weather)
+       |
+       v
+[ Meteorological Data Prep ] (Hub-height wind, time features)
+       |
+       v
+[ XGBoost Forecasting Models ] (1.5x scaled capacity simulation)
+       |
+       v
+[ Surplus Calculation ] (Local headroom constraint)
+       |
+       +-----------------------+-------------------------+
+       |                       |                         |
+       v                       v                         v
+[ Priority Dispatch ]    [ Settlement Engine ]    [ Digital Twin Sim ]
+(Tiers 1 -> 2 -> 3)      (Waterfall payment)      (Swing equation)
+       |                       |                         |
+       +-----------------------+-------------------------+
+                               |
+                               v
+                     [ Streamlit Dashboard ]
+                   (EETC Control Room & Portal)
+```
 
 ---
 
@@ -19,221 +43,133 @@ Shabaka Pulse addresses renewable energy curtailment in Egypt. When Benban Solar
 
 ```
 shabaka-pluse/
-├── nasa_power_data_prep.ipynb        # Step 1 — Data acquisition
-├── train_forecast_models.ipynb       # Step 2 — Model training
-├── build_facility_dataset.ipynb      # Step 3 — Facility dataset generation
-├── facility_clustering.ipynb         # Step 4 — K-Means clustering + dispatch
-├── dispatch_solver.ipynb             # Step 5 — Dispatch solver validation
-├── compute_surplus.ipynb             # Step 6 — Surplus computation
+├── README.md                      # Primary project documentation
+├── nasa_power_data_prep.ipynb      # Step 1 — Weather data prep
+├── train_forecast_models.ipynb     # Step 2 — XGBoost model training
+├── build_facility_dataset.ipynb    # Step 3 — Facility dataset creation
+├── facility_clustering.ipynb       # Step 4 — K-Means tiering
+├── dispatch_solver.ipynb           # Step 5 — Priority dispatch verification
+├── compute_surplus.ipynb           # Step 6 — Scaled surplus computation
+├── settlement_engine.ipynb         # Step 7 — Financial settlement ledgers
+├── digital_twin_sim.ipynb          # Step 8 — Grid frequency simulation
+├── app.py                          # Step 9 — Streamlit dashboard
 ├── data/
-│   ├── raw_benban.csv                # Cached NASA API response (Benban solar)
-│   ├── raw_suez.csv                  # Cached NASA API response (Gulf of Suez wind)
-│   ├── nasa_power_training_data.csv  # Merged, feature-engineered training dataset
-│   ├── facilities.csv                # 30 synthetic Egyptian industrial facilities
-│   └── facilities_clustered.csv     # Facilities with K-Means tier assignments
+│   ├── raw_benban.csv              # NASA API solar response
+│   ├── raw_suez.csv                # NASA API wind response
+│   ├── nasa_power_training_data.csv# Merged training dataset
+│   ├── facilities.csv              # 30 synthetic VPP facilities
+│   ├── facilities_clustered.csv    # Facilities with K-Means tiers
+│   ├── surplus_forecast.csv        # Scaled full-year hourly surplus
+│   └── settlement_ledgers.json     # Settlement financial outputs
+├── docs/
+│   ├── solar_model_pipeline.md     # Solar pipeline detailed guide
+│   ├── wind_model_pipeline.md      # Wind pipeline detailed guide
+│   └── dashboard_guide.md          # Streamlit dashboard guide
 └── models/
-    ├── solar_model.json              # Trained XGBoost solar forecasting model
-    ├── wind_model.json               # Trained XGBoost wind forecasting model
-    └── feature_config.json           # Feature schema and capacity constants
+    ├── solar_model.json            # Trained XGBoost solar weights
+    ├── wind_model.json             # Trained XGBoost wind weights
+    └── feature_config.json         # Feature schema & capacity metadata
 ```
 
 ---
 
-## Pipeline Steps
+## Pipeline Execution Details
 
-### Step 1 — `nasa_power_data_prep.ipynb`
-**NASA POWER Data Acquisition & Preparation**
+### Step 1 — `nasa_power_data_prep.ipynb` (Meteorological Prep)
+Fetches real hourly meteorological data for the full year 2025 using NASA's public POWER API.
+- **Solar location**: Benban Solar Park coordinates (24.40 N, 32.95 E). Fetches Global Horizontal Irradiance (GHI), Direct Normal Irradiance (DNI), clear-sky GHI, and air temperature.
+- **Wind location**: Gulf of Suez corridor (28.35 N, 33.10 E). Fetches 10m wind speed, 50m wind speed, 50m wind direction, and air temperature.
+- **Calculations**: Extrapolates wind speed to 100m hub-height (`ws100m`) using the Wind Power Law exponent ($\alpha = 0.14$).
+- **Output**: `data/nasa_power_training_data.csv` (8,760 hours).
 
-Fetches real hourly meteorological data from NASA's public POWER API (no API key required) for two locations:
+### Step 2 — `train_forecast_models.ipynb` (Forecasting Models)
+Trains XGBoost regressors to model generation profiles.
+- **Physics Labels**:
+  - **Solar**: Linear GHI derate of 0.82 to model system efficiency, capped at 1,800 MW (Benban nameplate), with Gaussian noise ($\sigma=15$ MW).
+  - **Wind**: Piecewise turbine power curve (cut-in 3 m/s, rated 12 m/s, cut-out 25 m/s) capped at 500 MW (Suez nameplate), with Gaussian noise ($\sigma=8$ MW).
+- **Parameters**: `XGBRegressor(n_estimators=200, max_depth=5, learning_rate=0.05)`, split chronologically at `2025-11-01`.
+- **Output**: `models/solar_model.json`, `models/wind_model.json`, and `models/feature_config.json`.
 
-| Location | NASA Parameters Fetched |
-|---|---|
-| Benban Solar Park (24.40°N, 32.95°E) | GHI, DNI, clear-sky GHI, 2m temperature |
-| Gulf of Suez / Ras Ghareb (28.35°N, 33.10°E) | 10m wind speed, 50m wind speed, 50m wind direction, 2m temperature |
+### Step 3 — `build_facility_dataset.ipynb` (VPP Facility Profile)
+Generates 30 synthetic Egyptian industrial facilities.
+- **Parameters**: Geographic coordinates jittered around real industrial hubs (Aswan, Suez/Ain Sokhna, Tenth of Ramadan, Borg El Arab).
+- **Flexibility**: Assigns maximum flexible capacity, ramp rates, and energy storage types (hydraulic, thermal, batch).
+- **Output**: `data/facilities.csv`.
 
-Key operations:
-- Retry logic with exponential backoff for API resilience.
-- Missing value replacement (`-999.0` sentinel → `NaN`).
-- Raw data cached to `data/raw_benban.csv` and `data/raw_suez.csv`.
-- Merge on UTC timestamp index.
-- Feature engineering: `hour_of_day`, `month`, `day_of_year`.
-- 100m hub-height wind speed (`ws100m`) extrapolated using the power law ($\alpha = 0.14$).
-- Output: `data/nasa_power_training_data.csv` — **8,760 rows × 13 columns** (full year 2025, hourly).
+### Step 4 — `facility_clustering.ipynb` (K-Means Tiering)
+Clusters the 30 facilities using K-Means on normalized flexibility features (`max_flex_mw` and `ramp_rate_mw_per_min`).
+- **Validation**: Elbow method and cross-tabulation validate the clustering against physical energy storage classes.
+- **Tiers**:
+  - **Tier 1 (Hydraulic)**: Water pumping/desalination. High ramp rate, zero process damage risk. Served first.
+  - **Tier 2 (Thermal)**: Cold storage. Moderate ramp rate. Served second.
+  - **Tier 3 (Batch)**: Cement/steel. Slow ramp rate, high interruption cost. Served last.
+- **Output**: `data/facilities_clustered.csv`.
 
----
+### Step 5 — `dispatch_solver.ipynb` (Priority Dispatch Solver)
+Implements and validates the surplus allocation solver.
+- **Algorithm**: Surplus MW is allocated tier by tier: Tier 1 -> Tier 2 -> Tier 3. Within each tier, capacity is saturated in order of `facility_id`.
+- **Validation**: Confirms energy conservation (`allocated + remaining = input`) and priority constraints across multiple surplus scenarios.
 
-### Step 2 — `train_forecast_models.ipynb`
-**Solar & Wind Forecasting Models**
+### Step 6 — `compute_surplus.ipynb` (Surplus & Capacity Expansion)
+Runs full-year hourly predictions and calculates grid surplus.
+- **Capacity Expansion**: Simulates a 50% capacity expansion. Solar and wind predictions are scaled by **1.5** inside the Pandas DataFrame before calculating total generation and surplus.
+- **Local Transmission Proxy**: National demand is modeled as a diurnal and seasonal curve (20,000–38,000 MW). Local headroom limit is defined as `HEADROOM_FRACTION = 0.09` (9% of national demand) with a 400 MW floor.
+- **Calculations**: `surplus_mw = max(0, solar_pred_mw + wind_pred_mw - local_headroom_mw)`.
+- **Output**: `data/surplus_forecast.csv`.
 
-Trains two separate XGBoost regression models predicting MW output.
+### Step 7 — `settlement_engine.ipynb` (Financial Settlement)
+Computes avoided costs and distributes financial credits for a sample peak winter week (Jan 1 - Jan 7).
+- **Avoided Cost Rationale**:
+  - **PPA Offset**: Avoided solar/wind contract cost of **1,400 EGP/MWh**.
+  - **CCGT Fuel Saving**: preserved gas value calculated using a CCGT heat rate of **7.5 MMBtu/MWh**, LNG spot price of **$10.50/MMBtu**, and an exchange rate of **50 EGP/USD** (equivalent to **3,937.50 EGP/MWh**).
+  - **Gross Value**: **5,337.50 EGP/MWh** of absorbed surplus.
+- **Waterfall Split**:
+  - **50% Factory Discount Credit**: Paid to industrial partners as a billing discount for absorbing power.
+  - **40% Treasury Retained Savings**: Retained by the state treasury for avoided subsidy and PPA costs.
+  - **10% Platform Operator Fee**: Distributed to the VPP administrator.
+- **Output**: `data/settlement_ledgers.json`.
 
-**Physics-based label generation:**
-- **Solar**: Derate factor 0.82 on GHI-driven raw output, capped at 1,800 MW (Benban nameplate), Gaussian noise $\sigma=15$ MW.
-- **Wind**: Piecewise power curve with cut-in 3 m/s, rated 12 m/s, cut-out 25 m/s, capped at 500 MW (Suez nameplate), Gaussian noise $\sigma=8$ MW.
+### Step 8 — `digital_twin_sim.ipynb` (Grid Stability Digital Twin)
+Models the dynamic grid frequency response using the Swing Equation:
+$$\frac{df}{dt} = \frac{f_0}{2H} \cdot \frac{P_{gen} - P_{load}}{S_n}$$
+- **Parameters**: Nominal frequency $f_0 = 50.0$ Hz, inertia constant $H = 4.5$ s, system capacity $S_n = 59,700$ MVA.
+- **Interlock Trigger**: At $t = 10$ s, a generator outage of 1,800 MW is injected. When the grid frequency falls below the safety threshold of **49.8 Hz**, the VPP fast interlock system triggers, shedding **300 MW** of Tier-1 industrial load in under 100 ms to stabilize frequency decay.
 
-**Training configuration:**
-- Chronological train/test split at `2025-11-01` (10 months train, 2 months test).
-- `XGBRegressor(n_estimators=200, max_depth=5, learning_rate=0.05)`.
-- Evaluation metrics: MAE (MW), RMSE (MW), R², Capacity-Normalized MAE (%).
+### Step 9 — `app.py` (Streamlit Dashboard)
+An interactive dashboard displaying the virtual power plant. Run using:
+`streamlit run app.py`
 
-**Feature schema** (saved to `models/feature_config.json`):
-
-| Model | Features |
-|---|---|
-| Solar (Benban) | `allsky_sfc_sw_dwn`, `allsky_sfc_sw_dni`, `clrsky_sfc_sw_dwn`, `t2m_benban`, `hour_of_day`, `month` |
-| Wind (Suez) | `ws100m`, `ws50m`, `t2m_suez`, `hour_of_day`, `month` |
-
-**Output files:**
-- `models/solar_model.json` (~616 KB)
-- `models/wind_model.json` (~655 KB)
-- `models/feature_config.json`
-
----
-
-### Step 3 — `build_facility_dataset.ipynb`
-**Industrial Facility Dataset**
-
-Generates a synthetic dataset of 30 Egyptian industrial facilities structured into three operational tiers based on physical energy storage mechanisms.
-
-| Tier | Storage Type | Industry Types | Flex Capacity Range | Ramp Rate Range |
-|---|---|---|---|---|
-| Tier 1 | Hydraulic | Desalination, water pumping | 10–35 MW | 1.5–4.0 MW/min |
-| Tier 2 | Thermal | Cold storage, food preservation | 5–20 MW | 0.5–1.5 MW/min |
-| Tier 3 | Batch | Cement grinding, steel rolling | 40–100 MW | 0.1–0.5 MW/min |
-
-Facilities are geographically anchored near four real Egyptian industrial zones: Aswan/Benban, Suez/Ain Sokhna, Tenth of Ramadan, and Borg El Arab/Alexandria, with Gaussian spatial jitter.
-
-**Output file:** `data/facilities.csv` — 30 rows × 8 columns.
-
-Schema:
-
-| Column | Description |
-|---|---|
-| `facility_id` | Unique identifier string |
-| `facility_name` | Descriptive facility name |
-| `industry_type` | Industry classification |
-| `max_flex_mw` | Maximum flexible load capacity (MW) |
-| `ramp_rate_mw_per_min` | Rate at which load can be adjusted (MW/min) |
-| `storage_type` | Energy storage buffer mechanism |
-| `lat` / `lon` | Geographic coordinates |
-
----
-
-### Step 4 — `facility_clustering.ipynb`
-**Facility Clustering & Dispatch Allocation**
-
-Clusters the 30 facilities using K-Means on their flexibility features, independently validating the tier structure built into the synthetic data.
-
-**Clustering workflow:**
-1. `StandardScaler` applied to `max_flex_mw` and `ramp_rate_mw_per_min` to prevent scale dominance.
-2. Elbow method across $k = 1$ to $k = 6$ confirms $k = 3$.
-3. `KMeans(n_clusters=3, n_init=10, random_state=42)` assigns raw cluster labels.
-4. Raw clusters mapped to operational Tiers 1–3 by ranking mean ramp rate (descending).
-5. Cross-tabulation of assigned `tier` vs ground-truth `storage_type` validates alignment.
-
-**Output file:** `data/facilities_clustered.csv` — 30 rows with added `tier` and `raw_cluster` columns.
-
-**Dispatch function** `allocate_surplus(surplus_mw, clustered_facilities)` is also implemented and tested in this notebook with test cases at 15 MW, 200 MW, and 1,500 MW surplus.
-
----
-
-### Step 5 — `dispatch_solver.ipynb`
-**Priority Dispatch Solver**
-
-A dedicated validation notebook for the `allocate_surplus` priority dispatch function.
-
-**Dispatch logic:**
-Surplus is allocated tier by tier in priority order: Tier 1 → Tier 2 → Tier 3. Within each tier, facilities are served in deterministic `facility_id` order until remaining surplus is exhausted or all capacity is used.
-
-**Priority rationale:**
-- **Tier 1 first**: Hydraulic facilities (desalination, water pumping) have water storage buffering operational fluctuations, so load shedding carries zero product damage risk.
-- **Tier 2 second**: Thermal facilities have a safety buffer from refrigeration thermal inertia, but sustained curtailment eventually risks food safety.
-- **Tier 3 last**: Batch processing facilities (cement, steel) incur the highest operational cost from sudden load interruption during active processing cycles.
-
-**Test cases validated:**
-
-| Scenario | Surplus Input | Expected Behavior |
-|---|---|---|
-| Low Surplus | 100 MW | Partially absorbed by Tier 1 only |
-| Medium Surplus | 350 MW | Tier 1 exhausted, spills into Tier 2 |
-| High Surplus | 900 MW | All tiers saturated, unallocated surplus remains |
-
-Each test asserts `abs((allocated_mw + remaining_mw) - surplus_mw) < 1e-6` (energy conservation).
-
----
-
-### Step 6 — `compute_surplus.ipynb`
-**Surplus Calculation**
-
-Generates the hourly `surplus_mw` time series that feeds the dispatch and settlement engines.
-
-**Pipeline:**
-1. Load trained models from `models/` and the feature configuration.
-2. Run inference across all 8,760 hours of the year for `solar_pred_mw` and `wind_pred_mw`.
-3. Build a **synthetic national demand profile** (20,000–38,000 MW, seasonal + diurnal curves) as a proxy for EETC/EEHC published grid demand data.
-4. Derive `local_headroom_mw` as `HEADROOM_FRACTION = 9%` of national demand, representing the regional transmission corridor absorption threshold before curtailment begins.
-5. Compute `surplus_mw = max(0, solar_pred_mw + wind_pred_mw - local_headroom_mw)`.
-
-**Sanity check:**  
-Winter midday window (Dec, Jan, Feb; 10:00–14:00) is validated for nonzero surplus events. If none are found, the notebook explicitly flags that `HEADROOM_FRACTION` must be lowered.
-
-**Output file:** `data/surplus_forecast.csv` — full-year hourly dataset including `solar_pred_mw`, `wind_pred_mw`, `total_pred_mw`, `raw_surplus_mw`, `curtailable_surplus_mw`, and all weather features.
-
----
-
-## Data Files Reference
-
-| File | Rows | Columns | Description |
-|---|---|---|---|
-| `data/raw_benban.csv` | 8,760 | 5 | Cached raw NASA POWER response for Benban solar |
-| `data/raw_suez.csv` | 8,760 | 5 | Cached raw NASA POWER response for Gulf of Suez wind |
-| `data/nasa_power_training_data.csv` | 8,760 | 13 | Merged, cleaned, feature-engineered training dataset |
-| `data/facilities.csv` | 30 | 8 | Synthetic Egyptian industrial facility dataset |
-| `data/facilities_clustered.csv` | 30 | 10 | Facilities with K-Means tier and raw cluster assignments |
-
----
-
-## Model Files Reference
-
-| File | Size | Description |
-|---|---|---|
-| `models/solar_model.json` | ~616 KB | XGBoost solar generation forecasting model |
-| `models/wind_model.json` | ~655 KB | XGBoost wind generation forecasting model |
-| `models/feature_config.json` | ~332 B | Feature schema, capacity constants (Benban 1800 MW, Suez 500 MW) |
-
----
-
-## Execution Order
-
-Run notebooks in this order on a clean environment:
-
-```
-1. nasa_power_data_prep.ipynb       → produces data/nasa_power_training_data.csv
-2. train_forecast_models.ipynb      → produces models/*.json
-3. build_facility_dataset.ipynb     → produces data/facilities.csv
-4. facility_clustering.ipynb        → produces data/facilities_clustered.csv
-5. dispatch_solver.ipynb            → validates dispatch logic (no new output files)
-6. compute_surplus.ipynb            → produces data/surplus_forecast.csv
-```
-
-Each notebook runs top-to-bottom via "Restart & Run All" assuming its input files already exist.
+- **EETC Control Room**: Displays real-time grid metrics, full-year solar and wind generation, transmission limits, diurnal/seasonal heatmaps, the digital twin interlock simulation, and an interactive Folium map showing the geographic location and tier status of the 30 active VPP facilities.
+- **Dispatch Simulator**: Allows users to select any hour of the year or input a custom surplus MW value to visualize the priority dispatch solver. Displays active facilities, unallocated surplus, a stacked bar chart of allocations by tier, and a tier-wise capacity utilization table.
+- **Industrial Partner Portal**: Allows factory managers to select their facility, adjust their flexible capacity commitment slider, and view their dynamic, scaled settlement ledger credit.
 
 ---
 
 ## Technical Stack
 
-| Category | Tools |
+| Domain | Technologies |
 |---|---|
-| Data | pandas, numpy |
-| API | NASA POWER hourly REST API (public, no key) |
-| Machine Learning | XGBoost, scikit-learn (StandardScaler, KMeans) |
-| Visualization | matplotlib |
-| Environment | Jupyter Notebook, Python 3.9+ |
+| Core Language | Python 3.9+ |
+| Data Processing | pandas, numpy |
+| API Integration | NASA POWER REST API |
+| Machine Learning | XGBoost, scikit-learn |
+| Web Application | Streamlit, Streamlit Folium |
+| Visualization | Plotly, Folium, matplotlib |
 
 ---
 
-## Notes
+## Complete Notebook Execution Order
 
-- The synthetic national demand profile in `compute_surplus.ipynb` is a placeholder. Replace with published EETC/EEHC demand telemetry if available.
-- The `HEADROOM_FRACTION = 0.09` constant in `compute_surplus.ipynb` controls how aggressively the system reports surplus. Tune this based on actual transmission corridor ratings.
-- All random operations use `SEED = 42` for reproducibility across machines.
+Run the notebooks in this order on a clean environment to generate all data:
+
+```
+1. nasa_power_data_prep.ipynb    → creates data/raw_benban.csv, raw_suez.csv, and nasa_power_training_data.csv
+2. train_forecast_models.ipynb   → creates models/solar_model.json, wind_model.json, and feature_config.json
+3. build_facility_dataset.ipynb  → creates data/facilities.csv
+4. facility_clustering.ipynb     → creates data/facilities_clustered.csv
+5. dispatch_solver.ipynb         → validates dispatch logic (runs tests in memory)
+6. compute_surplus.ipynb         → creates data/surplus_forecast.csv (runs 1.5x scaled capacity simulation)
+7. settlement_engine.ipynb       → creates data/settlement_ledgers.json
+8. digital_twin_sim.ipynb        → runs swing equation and interlock simulation
+9. app.py                        → Streamlit dashboard reads forecast, clusters, and ledgers
+```
