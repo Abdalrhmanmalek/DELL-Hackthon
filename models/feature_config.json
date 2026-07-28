@@ -1,0 +1,19 @@
+{
+  "solar_features": [
+    "allsky_sfc_sw_dwn",
+    "allsky_sfc_sw_dni",
+    "clrsky_sfc_sw_dwn",
+    "t2m_benban",
+    "hour_of_day",
+    "month"
+  ],
+  "wind_features": [
+    "ws100m",
+    "ws50m",
+    "t2m_suez",
+    "hour_of_day",
+    "month"
+  ],
+  "benban_capacity_mw": 1800.0,
+  "suez_capacity_mw": 500.0
+}
