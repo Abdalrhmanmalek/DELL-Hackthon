@@ -1,0 +1,31 @@
+facility_id,facility_name,industry_type,max_flex_mw,ramp_rate_mw_per_min,storage_type,lat,lon,raw_cluster,tier
+FAC-001,Desalination Plant #1,Desalination Plant,20.97,3.65,hydraulic,30.927,29.4824,1,1
+FAC-002,Food Preservation Facility #1,Food Preservation Facility,16.42,1.29,thermal,30.8792,29.5373,2,2
+FAC-003,Steel Rolling Mill #1,Steel Rolling Mill,95.61,0.36,batch,29.9064,32.5734,0,3
+FAC-004,Desalination Plant #2,Desalination Plant,23.86,1.66,hydraulic,24.4739,32.7375,2,2
+FAC-005,Cold Storage Logistics #1,Cold Storage Logistics,10.32,1.47,thermal,30.8723,29.5586,2,2
+FAC-006,Steel Rolling Mill #2,Steel Rolling Mill,68.0,0.12,batch,24.4506,32.7615,0,3
+FAC-007,Water Pumping Station #1,Water Pumping Station,34.19,2.31,hydraulic,30.2593,31.7808,1,1
+FAC-008,Food Preservation Facility #2,Food Preservation Facility,6.95,0.98,thermal,24.3888,32.7725,2,2
+FAC-009,Steel Rolling Mill #3,Steel Rolling Mill,89.96,0.38,batch,29.8772,32.5167,0,3
+FAC-010,Desalination Plant #3,Desalination Plant,19.69,2.22,hydraulic,30.9236,29.5912,1,1
+FAC-011,Food Preservation Facility #3,Food Preservation Facility,5.11,1.29,thermal,24.4616,32.6671,2,2
+FAC-012,Cement Grinding Mill #1,Cement Grinding Mill,67.53,0.33,batch,30.8662,29.6547,0,3
+FAC-013,Desalination Plant #4,Desalination Plant,21.78,2.91,hydraulic,30.2833,31.7581,1,1
+FAC-014,Food Preservation Facility #4,Food Preservation Facility,13.39,0.8,thermal,30.2826,31.7269,2,2
+FAC-015,Steel Rolling Mill #4,Steel Rolling Mill,64.51,0.44,batch,24.3733,32.694,0,3
+FAC-016,Water Pumping Station #2,Water Pumping Station,17.34,3.15,hydraulic,29.8286,32.5579,1,1
+FAC-017,Food Preservation Facility #5,Food Preservation Facility,11.1,1.31,thermal,30.2669,31.7318,2,2
+FAC-018,Cement Grinding Mill #2,Cement Grinding Mill,83.34,0.28,batch,24.4065,32.7406,0,3
+FAC-019,Water Pumping Station #3,Water Pumping Station,27.41,2.62,hydraulic,24.4251,32.7188,1,1
+FAC-020,Food Preservation Facility #6,Food Preservation Facility,10.43,0.59,thermal,30.2339,31.7001,2,2
+FAC-021,Cement Grinding Mill #3,Cement Grinding Mill,81.98,0.21,batch,30.945,29.5622,0,3
+FAC-022,Desalination Plant #5,Desalination Plant,21.23,2.18,hydraulic,30.2525,31.733,1,1
+FAC-023,Cold Storage Logistics #2,Cold Storage Logistics,8.04,0.81,thermal,29.8619,32.5203,2,2
+FAC-024,Cement Grinding Mill #4,Cement Grinding Mill,85.51,0.39,batch,30.8916,29.5811,0,3
+FAC-025,Desalination Plant #6,Desalination Plant,26.25,1.71,hydraulic,30.309,31.761,2,2
+FAC-026,Cold Storage Logistics #3,Cold Storage Logistics,9.95,0.64,thermal,29.9232,32.4906,2,2
+FAC-027,Steel Rolling Mill #5,Steel Rolling Mill,95.51,0.33,batch,24.3612,32.7718,0,3
+FAC-028,Desalination Plant #7,Desalination Plant,33.96,2.71,hydraulic,24.4457,32.7819,1,1
+FAC-029,Cold Storage Logistics #4,Cold Storage Logistics,12.36,1.44,thermal,29.8005,32.4434,2,2
+FAC-030,Steel Rolling Mill #6,Steel Rolling Mill,59.89,0.31,batch,29.8194,32.543,0,3
